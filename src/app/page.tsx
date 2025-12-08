@@ -1,9 +1,24 @@
-import Image from "next/image";
+"use client";
+import dynamic from "next/dynamic";
 
-export default function Home() {
+const Map = dynamic(() => import("@/components/Map"), {
+  ssr: false,
+});
+
+const ElevationTool = dynamic(
+  () => import("@/components/ElevationTool"),
+  { ssr: false }
+);
+
+
+export default function Page() {
   return (
-    <div className="flex min-h-screen items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-      route-elevation-engine
+    <div className="root">
+      <main className="relative min-h-screen z-10">
+        <Map />
+      </main>
+
+      <ElevationTool />
     </div>
   );
 }
