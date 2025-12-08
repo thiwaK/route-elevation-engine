@@ -10,7 +10,7 @@ export default function ElevationTool() {
   return (
     <>
       <ElevationButton onClick={() => setOpen(v => !v)} active={open} />
-      {open && <ElevationContainer />}
+      {<ElevationContainer active={open}/>}
     </>
   );
 }

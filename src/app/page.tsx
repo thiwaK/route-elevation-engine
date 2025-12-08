@@ -1,6 +1,5 @@
 "use client";
 import dynamic from "next/dynamic";
-import ElevationContainer from "@/components/ElevationContainer";
 
 const Map = dynamic(() => import("@/components/Map"), {
   ssr: false,

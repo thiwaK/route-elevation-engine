@@ -1,4 +1,8 @@
-⏳ initial map view
-⏳ initial elevation profile view
-⏳ road segment selection functionality
+⏳ route data loading functionality
+⏳ route segment selection functionality
+⏳ additional map functions
 ⏳ profile development functionality
+⏳ profile export functionality
+⏳ UI element improvements
+⏳ animations/colors
+⏳ mobile support

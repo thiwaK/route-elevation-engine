@@ -5,15 +5,20 @@ import { useEffect, useRef, useState } from "react";
 interface ElevationContainerProps {
   initialOrientation?: "vertical" | "horizontal";
   initialPercent?: number; // 0-100
+  active?: boolean; // new
 }
 
 export default function ElevationContainer({
   initialOrientation = "vertical",
   initialPercent = 40,
+  active = false
 }: ElevationContainerProps) {
-  const [orientation, setOrientation] = useState<"vertical" | "horizontal">(initialOrientation);
+  const [orientation, setOrientation] = useState<"vertical" | "horizontal">(
+    initialOrientation
+  );
   const [percent, setPercent] = useState<number>(initialPercent);
   const dragging = useRef(false);
+  // const [active, setActive] = useState(false);
 
   const resizeOffsetPercentage = 10; // min/max clamp
 
@@ -25,14 +30,20 @@ export default function ElevationContainer({
         // For vertical, anchored to bottom
         const newPercent = Math.max(
           resizeOffsetPercentage,
-          Math.min(100 - resizeOffsetPercentage, ((window.innerHeight - e.clientY) / window.innerHeight) * 100)
+          Math.min(
+            100 - resizeOffsetPercentage,
+            ((window.innerHeight - e.clientY) / window.innerHeight) * 100
+          )
         );
         setPercent(newPercent);
       } else {
         // For horizontal, anchored to left
         const newPercent = Math.max(
           resizeOffsetPercentage,
-          Math.min(100 - resizeOffsetPercentage, (e.clientX / window.innerWidth) * 100)
+          Math.min(
+            100 - resizeOffsetPercentage,
+            (e.clientX / window.innerWidth) * 100
+          )
         );
         setPercent(newPercent);
       }
@@ -57,7 +68,8 @@ export default function ElevationContainer({
   function startDrag(e: React.MouseEvent) {
     dragging.current = true;
     document.body.style.userSelect = "none";
-    document.body.style.cursor = orientation === "vertical" ? "row-resize" : "col-resize";
+    document.body.style.cursor =
+      orientation === "vertical" ? "row-resize" : "col-resize";
     e.preventDefault();
   }
 
@@ -69,13 +81,39 @@ export default function ElevationContainer({
     setPercent(initialPercent);
   }
 
+  // const style: React.CSSProperties =
+  //   orientation === "vertical"
+  //     ? { position: "fixed", left: 0, right: 0, bottom: 0, height: `${percent}vh`, zIndex: 30 }
+  //     : { position: "fixed", top: 0, bottom: 0, left: 0, width: `${percent}vw`, zIndex: 30 };
+
   const style: React.CSSProperties =
     orientation === "vertical"
-      ? { position: "fixed", left: 0, right: 0, bottom: 0, height: `${percent}vh`, zIndex: 30 }
-      : { position: "fixed", top: 0, bottom: 0, left: 0, width: `${percent}vw`, zIndex: 30 };
+      ? {
+          position: "fixed",
+          left: 0,
+          right: 0,
+          bottom: 0,
+          height: `${percent}vh`,
+          transform: active ? "translateY(0)" : `translateY(${percent}vh)`,
+          transition: "transform 0.3s ease",
+          zIndex: 30,
+        }
+      : {
+          position: "fixed",
+          top: 0,
+          bottom: 0,
+          left: 0,
+          width: `${percent}vw`,
+          transform: active ? "translateX(0)" : `translateX(-${percent}vw)`,
+          transition: "transform 0.3s ease",
+          zIndex: 30,
+        };
 
   return (
-    <div style={style} className="bg-red-700 shadow-lg p-4 overflow-hidden">
+    <div
+      style={style}
+      className="bg-red-700 shadow-lg p-4 overflow-hidden transition-all"
+    >
       <div className="flex items-center justify-between mb-2">
         <div className="font-semibold text-white">Elevation Profile</div>
 
@@ -97,7 +135,10 @@ export default function ElevationContainer({
         </div>
       </div>
 
-      <canvas id="chart" className="w-full h-36 bg-white/5 rounded mb-2"></canvas>
+      <canvas
+        id="chart"
+        className="w-full h-36 bg-white/5 rounded mb-2"
+      ></canvas>
 
       <div className="flex justify-between text-sm text-white/90 mt-2">
         <span id="min-elevation">Min:</span>
