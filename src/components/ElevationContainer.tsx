@@ -1,27 +1,38 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import {
+  BiSolidDockLeft,
+  BiSolidDockRight,
+  BiSolidDockTop,
+  BiSolidDockBottom,
+} from "react-icons/bi";
+import { RiCloseCircleFill } from "react-icons/ri";
+
 
 interface ElevationContainerProps {
   initialOrientation?: "vertical" | "horizontal";
   initialPercent?: number; // 0-100
   active?: boolean; // new
+  onClose?: () => void;
 }
+
+
 
 export default function ElevationContainer({
   initialOrientation = "vertical",
   initialPercent = 40,
-  active = false
+  active = false,
+  onClose
 }: ElevationContainerProps) {
   const [orientation, setOrientation] = useState<"vertical" | "horizontal">(
     initialOrientation
   );
   const [percent, setPercent] = useState<number>(initialPercent);
   const dragging = useRef(false);
-  // const [active, setActive] = useState(false);
 
   const resizeOffsetPercentage = 10; // min/max clamp
-
+  
   useEffect(() => {
     function onMove(e: MouseEvent) {
       if (!dragging.current) return;
@@ -120,17 +131,22 @@ export default function ElevationContainer({
         <div className="flex items-center gap-2">
           <button
             onClick={toggleOrientation}
-            className="px-2 py-1 bg-white/10 text-white rounded hover:bg-white/20"
+            className="px-2 py-1 bg-white/10 text-white rounded hover:bg-white/20 flex items-center justify-center"
             title="Toggle orientation"
           >
-            {orientation === "vertical" ? "Vertical" : "Horizontal"}
+            {orientation === "vertical" ? (
+              <BiSolidDockLeft className="w-5 h-5" />
+            ) : (
+              <BiSolidDockBottom className="w-5 h-5" />
+            )}
           </button>
+          
           <button
-            onClick={resetSize}
+            onClick={onClose}
             className="px-2 py-1 bg-white/10 text-white rounded hover:bg-white/20"
-            title="Reset size"
+            title="Close"
           >
-            Reset
+            <RiCloseCircleFill className="w-5 h-5" />
           </button>
         </div>
       </div>

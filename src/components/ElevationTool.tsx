@@ -5,12 +5,13 @@ import ElevationButton from "./ElevationButton";
 import ElevationContainer from "./ElevationContainer";
 
 export default function ElevationTool() {
-  const [open, setOpen] = useState<boolean>(false);
+  const [open, setOpen] = useState(false);
+  const toggleOpen = () => setOpen((v) => !v);
 
   return (
     <>
-      <ElevationButton onClick={() => setOpen(v => !v)} active={open} />
-      {<ElevationContainer active={open}/>}
+      <ElevationButton onClick={toggleOpen} active={open} />
+      <ElevationContainer active={open} onClose={toggleOpen} />
     </>
   );
 }
