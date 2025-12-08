@@ -11,7 +11,7 @@ export default function Map() {
   }, []);
 
   return (
-    <div id="map" className="w-full" style={{ height: "100vh" }}>
+    <div id="map" className="w-full z-0" style={{ height: "100vh" }}>
       <MapContainer
         center={[7.9, 81.0]}
         zoom={8}

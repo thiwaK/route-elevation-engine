@@ -6,6 +6,12 @@ const Map = dynamic(() => import("@/components/Map"), {
   ssr: false,
 });
 
+const ElevationTool = dynamic(
+  () => import("@/components/ElevationTool"),
+  { ssr: false }
+);
+
+
 export default function Page() {
   return (
     <div className="root">
@@ -13,7 +19,7 @@ export default function Page() {
         <Map />
       </main>
 
-      <ElevationContainer />
+      <ElevationTool />
     </div>
   );
 }
