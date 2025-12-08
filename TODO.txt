@@ -1,5 +1,4 @@
 ⏳ initial map view
 ⏳ initial elevation profile view
-⏳ layout settings (left-right or up-down)
 ⏳ road segment selection functionality
 ⏳ profile development functionality

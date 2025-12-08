@@ -1,2 +1,3 @@
 ✔️ 2025-12-07: create repository
 ✔️ 2025-12-08: initial project structure and configurations
+⏳ layout settings (left-right or up-down)
