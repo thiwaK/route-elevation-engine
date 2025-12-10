@@ -8,7 +8,7 @@ import markerShadow from "leaflet/dist/images/marker-shadow.png";
 export function fixLeafletIcon() {
   const DefaultIcon = L.Icon.Default.prototype;
 
-  DefaultIcon.options.iconUrl = markerIcon.src;
-  DefaultIcon.options.iconRetinaUrl = markerIcon2x.src;
-  DefaultIcon.options.shadowUrl = markerShadow.src;
+  // DefaultIcon.options.iconUrl = markerIcon.src;
+  // DefaultIcon.options.iconRetinaUrl = markerIcon2x.src;
+  // DefaultIcon.options.shadowUrl = markerShadow.src;
 }
