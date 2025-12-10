@@ -5,7 +5,8 @@ import "leaflet/dist/leaflet.css";
 import "leaflet.vectorgrid";
 import { useEffect } from "react";
 import { fixLeafletIcon } from "@/lib/leafletIconFix";
-import { TransitLayer } from "@/components/map/TransitLayer";
+import { TransitLayer } from "./map/TransitLayer";
+import { ContourLayer } from "./map/Contourlayer";
 
 
 
@@ -19,7 +20,7 @@ export default function Map() {
       <div className="w-full z-0" style={{ height: "100vh" }}>
         <MapContainer
           center={[7.9, 81.0]}
-          zoom={12}
+          zoom={10}
           scrollWheelZoom={true}
           style={{ height: "100%", width: "100%" }}
         >
