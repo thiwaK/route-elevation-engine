@@ -11,9 +11,10 @@ import { useEffect, useState, useCallback } from "react";
 import { useMap } from "react-leaflet";
 import L from "leaflet";
 import "leaflet.vectorgrid";
-import "@/lib/layerStyling";
-import { roadSegment } from "@/lib/roadSegment";
+import vectorTileStyling from "@/lib/layerStyling";
+
 import { formatTime, formatDistance } from "@/lib/utils/formatters";
+import { useRouteStore } from "@/lib/stores/routeStore";
 
 type TransitLayerProps = { url?: string };
 
@@ -40,11 +41,12 @@ export function numberedDivIcon(n: number) {
 }
 
 export function TransitLayer({ url }: TransitLayerProps) {
+  const addPoint = useRouteStore((s) => s.addPoint);
+  const points = useRouteStore((s) => s.points);
+  const segment = useRouteStore((s) => s.segment);
+
   const accessToken = process.env.NEXT_PUBLIC_MAPBOX_TOKEN!;
   if (!accessToken) throw new Error("MAPBOX_TOKEN is required");
-
-  const [points, setPoints] = useState<[number, number][]>([]);
-  const [segment, setSegment] = useState<[number, number][] | null>(null);
 
   const map = useMap();
 
@@ -52,30 +54,14 @@ export function TransitLayer({ url }: TransitLayerProps) {
     url ??
     `https://{s}.tiles.mapbox.com/v4/mapbox.mapbox-streets-v8/{z}/{x}/{y}.vector.pbf?access_token={token}`;
 
-  const updateSegment = useCallback(async () => {
-    if (points.length < 2) {
-      setSegment(null);
-      return;
-    }
-    const seg = await roadSegment(points, accessToken);
-    if (seg) {
-      console.log("distance:", formatDistance(seg.distance));
-      console.log("duration:", formatTime(seg.duration));
 
-      setSegment(seg.geometry);
-    }
-  }, [points, accessToken]);
-
-  useEffect(() => {
-    updateSegment();
-  }, [updateSegment]);
 
   useEffect(() => {
     if (!map) return;
 
     const layer = (L as any).vectorGrid
       .protobuf(effectiveUrl, {
-        rendererFactory: (L as any).canvas.tile,
+        // rendererFactory: (L as any).canvas.tile,
         vectorTileLayerStyles: vectorTileStyling,
         attribution: "&copy; OpenStreetMap contributors, &copy; MapBox",
         token: accessToken,
@@ -85,25 +71,26 @@ export function TransitLayer({ url }: TransitLayerProps) {
       })
       .addTo(map);
 
-    const ctrl = L.control
-      .layers({ "Mapbox Vector Tiles": layer }, {}, { collapsed: true })
-      .addTo(map);
+    // const ctrl = L.control
+    //   .layers({ "Mapbox Vector Tiles": layer }, {}, { collapsed: true })
+    //   .addTo(map);
 
     layer.on("click", (e: any) => {
       const { latlng } = e;
       if (latlng) {
-        setPoints((prev) => [...prev, [latlng.lat, latlng.lng]]);
+        // setPoints((prev) => [...prev, [latlng.lat, latlng.lng]]);
+        addPoint([latlng.lat, latlng.lng]);
       }
 
-      if (e.layer && e.layer.setStyle) {
-        const original = e.layer.options && e.layer.options.style;
-        e.layer.setStyle?.({ color: "#ff0", weight: 3 });
-        setTimeout(() => e.layer.setStyle?.(original), 300);
-      }
+      //   if (e.layer && e.layer.setStyle) {
+      //     const original = e.layer.options && e.layer.options.style;
+      //     e.layer.setStyle?.({ color: "#ff0", weight: 3 });
+      //     setTimeout(() => e.layer.setStyle?.(original), 300);
+      //   }
     });
 
     return () => {
-      ctrl.remove();
+      //   ctrl.remove();
       map.removeLayer(layer);
     };
   }, [map, effectiveUrl, accessToken]);
