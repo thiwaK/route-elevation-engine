@@ -4,3 +4,4 @@
 ✔️ 2025-12-08: initial elevation profile (structure only)
 ✔️ 2025-12-08: elevation profile layout (horizontal/vertical support)
 ✔️ 2025-12-08: elevation profile layout (openning/closing animation)
+✔️ 2025-12-08: button icons
