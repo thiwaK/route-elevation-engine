@@ -1,10 +1,6 @@
-⏳ route data loading functionality
 ⏳ page metadata (title, keywords, author, etc)
-⏳ route segment selection functionality
-⏳ additional map functions
 ⏳ profile development functionality
 ⏳ profile export functionality
 ⏳ UI element improvements
 ⏳ animations/colors
-⏳ UI effects (hover, click)
 ⏳ mobile support

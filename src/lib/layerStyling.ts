@@ -44,7 +44,7 @@ vectorTileStyling.road = function (properties: any, zoom: number) {
 
   if (primary_road.includes(c)) {
     return {
-      weight: 2,
+      weight: 3,
       color: "#EF1F1FFF",
       opacity: 0.8,
     };

@@ -27,6 +27,7 @@ export default function ElevationButton({
     }
     const seg = await roadSegment(points, accessToken);
     if (seg) {
+      console.log("geometry:", seg.geometry);
       console.log("distance:", formatDistance(seg.distance));
       console.log("duration:", formatTime(seg.duration));
       setSegment(seg.geometry);

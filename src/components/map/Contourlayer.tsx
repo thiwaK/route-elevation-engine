@@ -4,15 +4,32 @@ import { useEffect } from "react";
 import { useMap } from "react-leaflet";
 import L from "leaflet";
 import "leaflet.vectorgrid";
+import { useRouteStore } from "@/lib/stores/routeStore";
+import {
+  bboxCenterFromCoords,
+  maxDistanceFromCenterToBbox,
+} from "@/lib/utils/geo";
+import type { LatLngTuple } from "leaflet";
 
-type ContourLayerProps = {
-  lat: Number;
-  long: Number;
-};
+async function segmentRadius() {
+  const roadSegment = useRouteStore((s) => s.segment);
+  const center = bboxCenterFromCoords(roadSegment as LatLngTuple[]);
+  const { center: c2, maxDistanceMeters } = maxDistanceFromCenterToBbox(
+    roadSegment as LatLngTuple[]
+  );
+  return { center, maxDistanceMeters };
+}
 
-export function ContourLayer({ lat, long }: ContourLayerProps) {
+async function contourURL() {
+const { center, maxDistanceMeters } = await segmentRadius();
   const accessToken = process.env.NEXT_PUBLIC_MAPBOX_TOKEN!;
-  const effectiveUrl = `https://api.mapbox.com/v4/mapbox.mapbox-terrain-v2/tilequery/${long},${lat}.json?layers=contour&limit=50&access_token=${accessToken}`;
+  const effectiveUrl = `https://api.mapbox.com/v4/mapbox.mapbox-terrain-v2/tilequery/${center[0]},${center[1]}.json?layers=contour&radius=${maxDistanceMeters}&limit=50&access_token=${accessToken}`;
+
+  return { effectiveUrl };
+}
+
+export async function ContourLayer() {
+  const effectiveUrl = await contourURL();
 
   const map = useMap();
 
