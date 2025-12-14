@@ -9,7 +9,6 @@ import {
 } from "react-icons/bi";
 import { RiCloseCircleFill } from "react-icons/ri";
 
-
 interface ElevationContainerProps {
   initialOrientation?: "vertical" | "horizontal";
   initialPercent?: number; // 0-100
@@ -17,13 +16,11 @@ interface ElevationContainerProps {
   onClose?: () => void;
 }
 
-
-
 export default function ElevationContainer({
   initialOrientation = "vertical",
   initialPercent = 40,
   active = false,
-  onClose
+  onClose,
 }: ElevationContainerProps) {
   const [orientation, setOrientation] = useState<"vertical" | "horizontal">(
     initialOrientation
@@ -32,7 +29,7 @@ export default function ElevationContainer({
   const dragging = useRef(false);
 
   const resizeOffsetPercentage = 10; // min/max clamp
-  
+
   useEffect(() => {
     function onMove(e: MouseEvent) {
       if (!dragging.current) return;
@@ -123,15 +120,15 @@ export default function ElevationContainer({
   return (
     <div
       style={style}
-      className="bg-red-700 shadow-lg p-4 overflow-hidden transition-all"
+      className="bg-sky-50 shadow-lg p-4 overflow-hidden transition-all"
     >
       <div className="flex items-center justify-between mb-2">
-        <div className="font-semibold text-white">Elevation Profile</div>
+        <div className="font-semibold text-sky-900">Elevation Profile</div>
 
         <div className="flex items-center gap-2">
           <button
             onClick={toggleOrientation}
-            className="px-2 py-1 bg-white/10 text-white rounded hover:bg-white/20 flex items-center justify-center"
+            className="px-2 py-1 bg-sky-100 text-sky-800 rounded-xs hover:bg-sky-800 hover:text-sky-100 flex items-center justify-center bg-primary-content transition-all"
             title="Toggle orientation"
           >
             {orientation === "vertical" ? (
@@ -140,10 +137,10 @@ export default function ElevationContainer({
               <BiSolidDockBottom className="w-5 h-5" />
             )}
           </button>
-          
+
           <button
             onClick={onClose}
-            className="px-2 py-1 bg-white/10 text-white rounded hover:bg-white/20"
+            className="px-2 py-1 bg-sky-100 text-sky-800 rounded-xs hover:bg-sky-800 hover:text-sky-100 flex items-center justify-center bg-primary-content transition-all"
             title="Close"
           >
             <RiCloseCircleFill className="w-5 h-5" />
@@ -153,10 +150,10 @@ export default function ElevationContainer({
 
       <canvas
         id="chart"
-        className="w-full h-36 bg-white/5 rounded mb-2"
+        className="w-full h-36 bg-sky-100/50 rounded mb-2"
       ></canvas>
 
-      <div className="flex justify-between text-sm text-white/90 mt-2">
+      <div className="flex justify-between text-sm text-sky-900 mt-2">
         <span id="min-elevation">Min:</span>
         <span id="max-elevation">Max:</span>
       </div>
@@ -167,22 +164,22 @@ export default function ElevationContainer({
           onMouseDown={startDrag}
           role="separator"
           aria-orientation="horizontal"
-          className="absolute left-0 right-0 top-0 h-3 flex items-center justify-center"
+          className="absolute left-0 right-0 top-0 h-1 flex items-center justify-center bg-sky-100"
           style={{ cursor: "row-resize", zIndex: 40 }}
           title="Drag to resize"
         >
-          <div className="h-0.5 w-40 bg-accent-content flex items-center justify-center -mb-0.5 rounded transition-all"></div>
+          <div className="h-0.5 w-40 bg-accent-content flex items-center justify-center -mb-0.5 rounded transition-all bg-sky-200"></div>
         </div>
       ) : (
         <div
           onMouseDown={startDrag}
           role="separator"
           aria-orientation="vertical"
-          className="absolute top-0 bottom-0 right-0 w-3 flex items-center justify-center"
+          className="absolute top-0 bottom-0 right-0 w-1 flex items-center justify-center bg-sky-100"
           style={{ cursor: "col-resize", zIndex: 40 }}
           title="Drag to resize"
         >
-          <div className="h-30 w-0.5 bg-accent-content flex items-center justify-center -mr-0.5 rounded transition-all"></div>
+          <div className="h-30 w-0.5 bg-accent-content flex items-center justify-center -mr-0.5 rounded transition-all bg-sky-200"></div>
         </div>
       )}
     </div>
