@@ -40,13 +40,20 @@ export default function ElevationButton({
 
   return (
     <button
+      title="Show elevation profile"
+      aria-label="Show elevation profile"
       onClick={handleClick}
-      className={`fixed bottom-10 right-4 p-3 rounded-full shadow-lg bg-blend-color bg-amber-800 transition z-50 ${
-        active ? "ring-2 ring-amber-400" : ""
-      }`}
+      className={`fixed bottom-25 right-4 
+        p-3 rounded-full shadow-md bg-sky-800 
+        transition-all transform z-50 
+        hover:scale-105 hover:bg-sky-900 hover:shadow-sky-950 hover:shadow-lg`}
     >
       <span className="material-symbols-outlined">
         <PiMountainsFill className="w-5 h-5" />
+      </span>
+
+      <span className="absolute bottom-full mb-2 left-1/2 -translate-x-1/2 hidden group-hover:flex whitespace-nowrap rounded bg-gray-900 text-white text-xs px-2 py-1 shadow-lg">
+        Show elevation profile
       </span>
     </button>
   );
