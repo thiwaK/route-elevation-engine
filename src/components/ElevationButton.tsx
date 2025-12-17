@@ -1,8 +1,9 @@
 import { PiMountainsFill } from "react-icons/pi";
 import { useRouteStore } from "@/lib/stores/routeStore";
-import { useEffect, useCallback } from "react";
+import { useEffect, useCallback, useState } from "react";
 import { roadSegment } from "@/lib/roadSegment";
 import { formatTime, formatDistance } from "@/lib/utils/formatters";
+import { ContourLayer } from "./map/Contourlayer";
 
 interface ElevationButtonProps {
   onClick: () => void;
@@ -16,6 +17,7 @@ export default function ElevationButton({
   const setSegment = useRouteStore((s) => s.setSegment);
   const segment = useRouteStore((s) => s.segment);
   const points = useRouteStore((s) => s.points);
+  const [showContours, setShowContours] = useState(false);
 
   const accessToken = process.env.NEXT_PUBLIC_MAPBOX_TOKEN;
   if (!accessToken) throw new Error("MAPBOX_TOKEN is required");
@@ -27,16 +29,18 @@ export default function ElevationButton({
     }
     const seg = await roadSegment(points, accessToken);
     if (seg) {
-      console.log("geometry:", seg.geometry);
+      // console.log("geometry:", seg.geometry);
       console.log("distance:", formatDistance(seg.distance));
       console.log("duration:", formatTime(seg.duration));
       setSegment(seg.geometry);
     }
   }, [points, setSegment, accessToken]);
 
+  
   const handleClick = async () => {
     onClick();
     await updateSegment();
+    setShowContours((s) => !s); // or set to true to trigger rendering/update
   };
 
   return (

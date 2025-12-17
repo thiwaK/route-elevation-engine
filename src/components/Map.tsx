@@ -29,7 +29,7 @@ export default function Map() {
             maxZoom={19}
           />
 
-          <TransitLayer />
+          {/* <TransitLayer /> */}
           
         </MapContainer>
       </div>

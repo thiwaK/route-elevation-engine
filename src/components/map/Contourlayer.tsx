@@ -1,52 +1,24 @@
 "use client";
 
-import { useEffect } from "react";
 import { useMap } from "react-leaflet";
-import L from "leaflet";
-import "leaflet.vectorgrid";
 import { useRouteStore } from "@/lib/stores/routeStore";
-import {
-  bboxCenterFromCoords,
-  maxDistanceFromCenterToBbox,
-} from "@/lib/utils/geo";
-import type { LatLngTuple } from "leaflet";
+import { useContourTileQuery } from "@/hooks/useContourTileQuery";
+import { useMapboxVectorLayer } from "@/hooks/useMapboxVectorLayer";
 
-async function segmentRadius() {
-  const roadSegment = useRouteStore((s) => s.segment);
-  const center = bboxCenterFromCoords(roadSegment as LatLngTuple[]);
-  const { center: c2, maxDistanceMeters } = maxDistanceFromCenterToBbox(
-    roadSegment as LatLngTuple[]
-  );
-  return { center, maxDistanceMeters };
-}
-
-async function contourURL() {
-const { center, maxDistanceMeters } = await segmentRadius();
-  const accessToken = process.env.NEXT_PUBLIC_MAPBOX_TOKEN!;
-  const effectiveUrl = `https://api.mapbox.com/v4/mapbox.mapbox-terrain-v2/tilequery/${center[0]},${center[1]}.json?layers=contour&radius=${maxDistanceMeters}&limit=50&access_token=${accessToken}`;
-
-  return { effectiveUrl };
-}
-
-export async function ContourLayer() {
-  const effectiveUrl = await contourURL();
-
+export function ContourLayer() {
   const map = useMap();
+  const roadSegment = useRouteStore((s) => s.segment);
+  const { url } = useContourTileQuery(roadSegment);
 
-  useEffect(() => {
-    if (!map) return;
-
-    const layer = (L as any).vectorGrid.protobuf(effectiveUrl, {
-      maxZoom: 18,
-      vectorTileLayerStyles: {
-        primary: { color: "#512C02FF", weight: 2, opacity: 0.5 },
-        primary_link: { color: "#512C02FF", weight: 2, opacity: 0.5 },
-      },
-    });
-
-    layer.addTo(map);
-    return () => void map.removeLayer(layer);
-  }, [map, effectiveUrl]);
+  useMapboxVectorLayer(map, url, {
+    maxZoom: 18,
+    vectorTileLayerStyles: {
+      primary: { color: "#512C02FF", weight: 2, opacity: 0.5 },
+      primary_link: { color: "#512C02FF", weight: 2, opacity: 0.5 },
+    },
+  });
 
   return null;
 }
+
+// {"type":"FeatureCollection","features":[{"type":"Feature","id":1,"geometry":{"type":"Point","coordinates":[80.779576,7.710594]},"properties":{"ele":120,"index":2,"tilequery":{"distance":0,"geometry":"polygon","layer":"contour"}}},{"type":"Feature","id":2,"geometry":{"type":"Point","coordinates":[80.779576,7.710594]},"properties":{"ele":130,"index":1,"tilequery":{"distance":0,"geometry":"polygon","layer":"contour"}}},{"type":"Feature","id":3,"geometry":{"type":"Point","coordinates":[80.779576,7.710594]},"properties":{"ele":140,"index":2,"tilequery":{"distance":0,"geometry":"polygon","layer":"contour"}}}]}
