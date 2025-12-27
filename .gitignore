@@ -1,8 +1,8 @@
 # See https://help.github.com/articles/ignoring-files/ for more about ignoring files.
 
 # dependencies
-/node_modules
-/.pnp
+/NextJS/node_modules
+/NextJS/.pnp
 .pnp.*
 .yarn/*
 !.yarn/patches
@@ -11,14 +11,14 @@
 !.yarn/versions
 
 # testing
-/coverage
+/NextJS/coverage
 
 # next.js
-/.next/
-/out/
+/NextJS/.next/
+/NextJS/out/
 
 # production
-/build
+/NextJS/build
 
 # misc
 .DS_Store
@@ -40,3 +40,28 @@ yarn-error.log*
 *.tsbuildinfo
 next-env.d.ts
 
+# === Vite ===
+# Logs
+logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
+
+node_modules
+dist
+dist-ssr
+*.local
+
+# Editor directories and files
+.vscode/*
+!.vscode/extensions.json
+.idea
+.DS_Store
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?

@@ -7,6 +7,7 @@ import { MapContainer, TileLayer, useMap } from "react-leaflet";
 // import "leaflet.vectorgrid";
 import { useEffect } from "react";
 import { fixLeafletIcon } from "@/lib/leafletIconFix";
+import ElevationTool from "@/components/ElevationTool";
 // const ElevationTool = dynamic(() => import("@/components/ElevationTool"), {
 //   ssr: false,
 // });
@@ -30,13 +31,13 @@ export default function Page() {
               url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
               maxZoom={19}
             />
-
+            <ElevationTool />
             <TransitLayer />
           </MapContainer>
         </div>
       </main>
 
-      {/* <ElevationTool /> */}
+      
     </div>
   );
 }

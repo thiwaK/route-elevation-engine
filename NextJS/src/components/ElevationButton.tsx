@@ -1,22 +1,17 @@
 import { PiMountainsFill } from "react-icons/pi";
-import { useRouteStore } from "@/lib/stores/routeStore";
 import { useEffect, useCallback, useState } from "react";
 import { roadSegment } from "@/lib/roadSegment";
 import { formatTime, formatDistance } from "@/lib/utils/formatters";
 import { ContourLayer } from "./map/Contourlayer";
+import { Storage } from "@/lib/stores/storeApi";
 
 interface ElevationButtonProps {
   onClick: () => void;
-  active: boolean;
 }
 
-export default function ElevationButton({
-  onClick,
-  active,
-}: ElevationButtonProps) {
-  const setSegment = useRouteStore((s) => s.setSegment);
-  const segment = useRouteStore((s) => s.segment);
-  const points = useRouteStore((s) => s.points);
+export default function ElevationButton({ onClick }: ElevationButtonProps) {
+  
+  const { points, setSegment } = Storage();
   const [showContours, setShowContours] = useState(false);
 
   const accessToken = process.env.NEXT_PUBLIC_MAPBOX_TOKEN;
@@ -36,7 +31,6 @@ export default function ElevationButton({
     }
   }, [points, setSegment, accessToken]);
 
-  
   const handleClick = async () => {
     onClick();
     await updateSegment();
@@ -45,8 +39,8 @@ export default function ElevationButton({
 
   return (
     <button
-      title="Show elevation profile"
-      aria-label="Show elevation profile"
+      title="Generate elevation profile"
+      aria-label="Generate elevation profile"
       onClick={handleClick}
       className={`fixed bottom-25 right-4 
         p-3 rounded-full shadow-md bg-sky-800 
@@ -55,10 +49,6 @@ export default function ElevationButton({
     >
       <span className="material-symbols-outlined">
         <PiMountainsFill className="w-5 h-5" />
-      </span>
-
-      <span className="absolute bottom-full mb-2 left-1/2 -translate-x-1/2 hidden group-hover:flex whitespace-nowrap rounded bg-gray-900 text-white text-xs px-2 py-1 shadow-lg">
-        Show elevation profile
       </span>
     </button>
   );
