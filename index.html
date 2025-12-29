@@ -1,13 +1,115 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
     <link rel="icon" type="image/svg+xml" href="/vite.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link href="/src/style.css" rel="stylesheet" />
     <title>my-app</title>
   </head>
   <body class="bg-blue-500">
-    <div id="app"></div>
+    <main class="z-10 h-full w-full">
+      <div id="mapContainer" class="h-full w-full z-0 absolute">
+        <div id="map" class="h-full w-full"></div>
+      </div>
+
+      <div
+        id="elevationProfileContainer"
+        class="bg-sky-50 shadow-lg p-4 overflow-hidden transition-all z-10 absolute hidden"
+      >
+        <div class="flex items-center justify-between mb-2">
+          <div class="font-semibold text-sky-900">Elevation Profile</div>
+
+          <div class="flex items-center gap-2">
+            <button
+              id="btnProfileViewOrientation"
+              class="px-2 py-1 bg-sky-100 text-sky-800 rounded-xs hover:bg-sky-800 hover:text-sky-100 flex items-center justify-center bg-primary-content transition-all"
+              title="Toggle orientation"
+            >
+              <svg
+                stroke="currentColor"
+                fill="currentColor"
+                stroke-width="0"
+                viewBox="0 0 24 24"
+                height="1em"
+                width="1em"
+                xmlns="http://www.w3.org/2000/svg"
+              >
+                <path
+                  d="M21 19V5c0-1.103-.897-2-2-2H5c-1.103 0-2 .897-2 2v14c0 1.103.897 2 2 2h14c1.103 0 2-.897 2-2zm-11 0V5h9l.002 14H10z"
+                ></path>
+              </svg>
+            </button>
+
+            <button
+              id="btnProfileViewClose"
+              class="px-2 py-1 bg-sky-100 text-sky-800 rounded-xs hover:bg-sky-800 hover:text-sky-100 flex items-center justify-center bg-primary-content transition-all"
+              title="Close"
+            >
+              <svg
+                stroke="currentColor"
+                fill="currentColor"
+                stroke-width="0"
+                viewBox="0 0 24 24"
+                height="1em"
+                width="1em"
+                xmlns="http://www.w3.org/2000/svg"
+              >
+                <path
+                  d="M12 22C6.47715 22 2 17.5228 2 12C2 6.47715 6.47715 2 12 2C17.5228 2 22 6.47715 22 12C22 17.5228 17.5228 22 12 22ZM12 10.5858L9.17157 7.75736L7.75736 9.17157L10.5858 12L7.75736 14.8284L9.17157 16.2426L12 13.4142L14.8284 16.2426L16.2426 14.8284L13.4142 12L16.2426 9.17157L14.8284 7.75736L12 10.5858Z"
+                ></path>
+              </svg>
+            </button>
+          </div>
+        </div>
+
+        <canvas
+          id="chart"
+          class="w-full h-36 bg-sky-100/50 rounded mb-2"
+        ></canvas>
+
+        <div class="flex justify-between text-sm text-sky-900 mt-2">
+          <span id="min-elevation">Min:</span>
+          <span id="max-elevation">Max:</span>
+        </div>
+
+        <div
+          id="elevationProfileResizeContainer"
+          role="separator"
+          aria-orientation="horizontal"
+          class="absolute left-0 right-0 top-0 h-2 flex items-center justify-center bg-sky-50"
+        >
+          <div
+            id="elevationProfileResizeHandler"
+            title="Drag to resize"
+            class="bg-accent-content flex items-center justify-center rounded transition-all bg-sky-400 cursor-n-resize"
+          ></div>
+        </div>
+      </div>
+      
+      <button
+        id="btnElevation"
+        title="Generate elevation profile"
+        aria-label="Generate elevation profile"
+        class="fixed bottom-25 right-4 p-3 rounded-full shadow-md bg-sky-800 text-blue-100 transition-all transform z-50 hover:scale-105 hover:text-blue-200 hover:bg-sky-900 hover:shadow-sky-950 hover:shadow-lg active:translate-y-1"
+      >
+        <span className="material-symbols-outlined">
+          <svg
+            stroke="currentColor"
+            fill="currentColor"
+            stroke-width="0"
+            viewBox="0 0 256 256"
+            height="1.5rem"
+            width="1.5rem"
+            xmlns="http://www.w3.org/2000/svg"
+          >
+            <path
+              d="M254.88,195.92l-54.56-92.08A15.87,15.87,0,0,0,186.55,96h0a15.85,15.85,0,0,0-13.76,7.84l-15.64,26.39a4,4,0,0,0,0,4.07l26.8,45.47a8.13,8.13,0,0,1-1.89,10.55,8,8,0,0,1-11.8-2.26L101.79,71.88a16,16,0,0,0-27.58,0L1.11,195.94a8,8,0,0,0,1,9.52A8.23,8.23,0,0,0,8.23,208H247.77a8.29,8.29,0,0,0,6.09-2.55A8,8,0,0,0,254.88,195.92ZM64.43,120,88,80l23.57,40ZM140,52a24,24,0,1,1,24,24A24,24,0,0,1,140,52Z"
+            ></path>
+          </svg>
+        </span>
+      </button>
+    </main>
     <script type="module" src="/src/main.ts"></script>
   </body>
 </html>
