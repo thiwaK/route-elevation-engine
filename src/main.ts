@@ -1,3 +1,3 @@
 import "leaflet/dist/leaflet.css";
-import "./init"
+import "./Init"
 

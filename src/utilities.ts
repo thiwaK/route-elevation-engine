@@ -166,27 +166,35 @@ export function toggleElevationProfileVisibility(
   return isVisible!;
 }
 
-export function updateElevationProfileResizeHandlerStyles(container: HTMLDivElement) {
+export function updateElevationProfileResizeHandlerStyles(
+  container: HTMLDivElement
+) {
   if (isVertical) {
     container.setAttribute("aria-orientation", "vertical");
-    const handler = container.querySelector("#elevationProfileResizeHandler") as HTMLDivElement | null;
-    const handlerContainer = container.querySelector("#elevationProfileResizeContainer") as HTMLDivElement | null;
+    const handler = container.querySelector(
+      "#elevationProfileResizeHandler"
+    ) as HTMLDivElement | null;
+    const handlerContainer = container.querySelector(
+      "#elevationProfileResizeContainer"
+    ) as HTMLDivElement | null;
 
-    handlerContainer!.classList.add("h-2", "left-0")
-    handlerContainer!.classList.remove("w-3",  "bottom-0")
+    handlerContainer!.classList.add("h-2", "left-0");
+    handlerContainer!.classList.remove("w-3", "bottom-0");
     handler!.classList.remove("h-30", "w-0.5", "-mr-0.5");
     handler!.classList.add("h-0.5", "w-40", "-mb-0.5");
-
   } else {
     container.setAttribute("aria-orientation", "horizontal");
-    const handler = container.querySelector("#elevationProfileResizeHandler") as HTMLDivElement | null;
-    const handlerContainer = container.querySelector("#elevationProfileResizeContainer") as HTMLDivElement | null;
+    const handler = container.querySelector(
+      "#elevationProfileResizeHandler"
+    ) as HTMLDivElement | null;
+    const handlerContainer = container.querySelector(
+      "#elevationProfileResizeContainer"
+    ) as HTMLDivElement | null;
 
-    handlerContainer!.classList.remove("h-2", "left-0")
-    handlerContainer!.classList.add("w-3",  "bottom-0")
+    handlerContainer!.classList.remove("h-2", "left-0");
+    handlerContainer!.classList.add("w-3", "bottom-0");
     handler!.classList.remove("h-0.5", "w-40", "-mb-0.5");
     handler!.classList.add("h-30", "w-0.5", "-mr-0.5");
-    
   }
 }
 
@@ -236,4 +244,187 @@ export function updateElevationProfileContainerStyles(
       ? "translateX(0)"
       : `translateX(-${viewSize}vw)`!;
   }
+}
+
+export function formatTime(seconds: number): string {
+  if (seconds < 0) seconds = 0;
+
+  const h = Math.floor(seconds / 3600);
+  const m = Math.floor((seconds % 3600) / 60);
+  const s = Math.floor(seconds % 60);
+
+  if (h === 0) {
+    return `${m}:${s.toString().padStart(2, "0")}`;
+  }
+
+  return `${h}:${m.toString().padStart(2, "0")}:${s
+    .toString()
+    .padStart(2, "0")}`;
+}
+
+export function formatDistance(meters: number): string {
+  if (meters < 0) meters = 0;
+
+  if (meters >= 1000) {
+    const km = meters / 1000;
+    return `${km.toFixed(1)} km`;
+  }
+
+  return `${Math.round(meters)} m`;
+}
+
+import type { LatLngTuple } from "leaflet";
+import L from "leaflet";
+
+
+export function boundsToExtent(bounds: L.LatLngBounds) {
+  const { lat: minLat, lng: minLng } = bounds.getSouthWest();
+  const { lat: maxLat, lng: maxLng } = bounds.getNorthEast();
+
+  return { minLat, minLng, maxLat, maxLng };
+}
+
+
+/**
+ * Compute bounding box [minLat, minLng, maxLat, maxLng] from an array of [lat, lng] pairs.
+ */
+export function bboxFromCoords(coords: LatLngTuple[]) {
+  if (coords.length === 0) throw new Error("coords empty");
+  let minLat = Infinity,
+    minLng = Infinity,
+    maxLat = -Infinity,
+    maxLng = -Infinity;
+  for (const [lat, lng] of coords) {
+    if (lat < minLat) minLat = lat;
+    if (lat > maxLat) maxLat = lat;
+    if (lng < minLng) minLng = lng;
+    if (lng > maxLng) maxLng = lng;
+  }
+
+  const bounds = L.latLngBounds(
+    [minLat, minLng], // south-west
+    [maxLat, maxLng] // north-east
+  );
+  return bounds;
+}
+
+/**
+ * Get center point [lat, lng] of a bbox (rect) given either coords array or bbox object.
+ */
+export function bboxCenterFromCoords(coords: LatLngTuple[]) {
+  
+  const bounds = bboxFromCoords(coords);
+  const { minLat, minLng, maxLat, maxLng } = boundsToExtent(bounds)
+  const centerLat = (minLat + maxLat) / 2;
+  const centerLng = (minLng + maxLng) / 2;
+  return [centerLat, centerLng] as LatLngTuple;
+}
+
+/**
+ * Haversine distance between two [lat, lng] points in meters.
+ */
+export function haversineDistance(a: LatLngTuple, b: LatLngTuple) {
+  const toRad = (d: number) => (d * Math.PI) / 180;
+  const R = 6371000; // meters
+  const dLat = toRad(b[0] - a[0]);
+  const dLng = toRad(b[1] - a[1]);
+  const lat1 = toRad(a[0]);
+  const lat2 = toRad(b[0]);
+  const sinDlat = Math.sin(dLat / 2);
+  const sinDlng = Math.sin(dLng / 2);
+  const c =
+    2 *
+    Math.atan2(
+      Math.sqrt(
+        sinDlat * sinDlat + Math.cos(lat1) * Math.cos(lat2) * sinDlng * sinDlng
+      ),
+      Math.sqrt(
+        1 -
+          (sinDlat * sinDlat +
+            Math.cos(lat1) * Math.cos(lat2) * sinDlng * sinDlng)
+      )
+    );
+  return R * c;
+}
+
+/**
+ * Max distance (meters) from bbox center to bbox corners (or optionally to all coords).
+ * By default computes distance to the 4 bbox corners and returns the maximum.
+ */
+export function maxDistanceFromCenterToBbox(coords: LatLngTuple[]) {
+  const bounds = bboxFromCoords(coords);
+  const { minLat, minLng, maxLat, maxLng } = boundsToExtent(bounds)
+  const center = [(minLat + maxLat) / 2, (minLng + maxLng) / 2] as LatLngTuple;
+  const corners: LatLngTuple[] = [
+    [minLat, minLng],
+    [minLat, maxLng],
+    [maxLat, minLng],
+    [maxLat, maxLng],
+  ];
+  let max = 0;
+  for (const c of corners) {
+    const d = haversineDistance(center, c);
+    if (d > max) max = d;
+  }
+  return { center: center, maxDistanceMeters: max };
+}
+
+
+
+/**
+ * Convert longitude/latitude to tile x/y at a given zoom
+ */
+function lonLatToTile(
+  lon: number,
+  lat: number,
+  zoom: number
+): [number, number] {
+  const latRad = (lat * Math.PI) / 180;
+  const n = Math.pow(2, zoom);
+  const x = Math.floor(((lon + 180) / 360) * n);
+  const y = Math.floor(
+    ((1 - Math.log(Math.tan(latRad) + 1 / Math.cos(latRad)) / Math.PI) / 2) * n
+  );
+  return [x, y];
+}
+
+function latLngToTileXY(lat: number, lng: number, zoom: number) {
+  const sinLat = Math.sin((lat * Math.PI) / 180);
+  const n = Math.pow(2, zoom);
+
+  const x = Math.floor(((lng + 180) / 360) * n);
+  const y = Math.floor(
+    (1 -
+      Math.log((1 + sinLat) / (1 - sinLat)) /
+        (2 * Math.PI)) *
+      n / 2
+  );
+
+  return { x, y };
+}
+
+export function getTilesInBounds(
+  minLat: number,
+  minLng: number,
+  maxLat: number,
+  maxLng: number,
+  zoom: number
+) {
+  const sw = latLngToTileXY(minLat, minLng, zoom);
+  const ne = latLngToTileXY(maxLat, maxLng, zoom);
+
+  const tiles: { x: number; y: number; z: number }[] = [];
+
+  const minX = Math.min(sw.x, ne.x);
+  const maxX = Math.max(sw.x, ne.x);
+  const minY = Math.min(sw.y, ne.y);
+  const maxY = Math.max(sw.y, ne.y);
+
+  for (let x = minX; x <= maxX; x++) {
+    for (let y = minY; y <= maxY; y++) {
+      tiles.push({ x, y, z: zoom });
+    }
+  }
+
+  return tiles;
 }

@@ -8,4 +8,7 @@ export default defineConfig({
   optimizeDeps: {
     include: ["interactjs"],
   },
+  server: {
+    hmr: false,
+  },
 })
