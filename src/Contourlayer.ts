@@ -36,10 +36,10 @@ async function fetchTile(x: number, y: number, z: number) {
   }
 
   return {
-    x,
-    y,
-    z,
-    data: await res.arrayBuffer(),
+    "x":x,
+    "y":y,
+    "z":z,
+    "data": await res.arrayBuffer(),
   };
 }
 

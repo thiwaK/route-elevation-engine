@@ -15,7 +15,8 @@ import {
   bboxCenterFromCoords,
   maxDistanceFromCenterToBbox,
   getTilesInBounds,
-  boundsToExtent
+  boundsToExtent,
+  downloadGeoJSON,
 } from "./utilities";
 import {
   addRoutes,
@@ -23,8 +24,9 @@ import {
   getRoadSegement,
   resampleSegment,
 } from "./TransitLayer";
-import { getContours, addContours } from "./Contourlayer";
+import { fetchTiles, addContours } from "./Contourlayer";
 import { Storage } from "./StorageAPI";
+import { processPBF, swapCoords } from "./GeoProcessor";
 
 export const storage = Storage();
 export let map: L.Map;
@@ -167,20 +169,11 @@ function updateRouteSegment() {
   }).addTo(map);
 }
 
-function onStorageChange() {
+async function onStorageChange() {
   if (storage.segment) {
     updateRouteSegment();
     if (routeSegmentLayer) {
       const bbox = bboxFromCoords(storage.segment);
-      // const resampledRouteSegment = resampleSegment(routeSegmentLayer!, 10);
-      // const routeSegmentCenter = bboxCenterFromCoords(storage.segment);
-      // const {
-      //   center: routeSegmentCenter,
-      //   maxDistanceMeters: routeSegmentRadious,
-      // } = maxDistanceFromCenterToBbox(storage.segment);
-
-      // getContours(routeSegmentCenter, routeSegmentRadious, ["contour"]);
-
       const boundsLayer = L.rectangle(bbox, {
         color: "#ff0000", // outline color
         weight: 2, // outline width
@@ -191,15 +184,29 @@ function onStorageChange() {
 
       const { lat: minLat, lng: minLng } = bbox.getSouthWest();
       const { lat: maxLat, lng: maxLng } = bbox.getNorthEast();
-      const tiles = getTilesInBounds(
-        minLat,
-        minLng,
-        maxLat,
-        maxLng,
-        15
-      );
-      console.log(tiles)
-      addContours(map, bbox);
+      const tiles = getTilesInBounds(minLat, minLng, maxLat, maxLng, 15);
+      console.log(tiles);
+
+      const fetchedTiles = await fetchTiles(tiles, {
+        concurrency: 8,
+        onProgress: (done, total) => {
+          console.log(`${done}/${total} tiles fetched`);
+        },
+      });
+      console.log(fetchedTiles);
+
+      const geojson = processPBF(fetchedTiles, "contour");
+      const correctedGeoJSON = {
+        ...geojson,
+        features: geojson.features.map((f) => swapCoords(f)),
+      };
+
+      L.geoJSON(correctedGeoJSON, {}).addTo(map);
+
+      downloadGeoJSON(correctedGeoJSON, "correctedGeoJSON.json");
+      downloadGeoJSON(geojson, "geojson.json");
+
+      // addContours(map, bbox);
     }
   }
 }
