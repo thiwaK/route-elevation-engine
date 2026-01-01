@@ -8,7 +8,7 @@
     <title>my-app</title>
   </head>
   <body class="bg-blue-500">
-    <main class="z-10 h-full w-full">
+    <main id="dropZone" class="z-10 h-full w-full">
       <div id="mapContainer" class="h-full w-full z-0 absolute">
         <div id="map" class="h-full w-full"></div>
       </div>
@@ -63,10 +63,12 @@
           </div>
         </div>
 
-        <canvas
-          id="chart"
-          class="w-full h-36 bg-sky-100/50 rounded mb-2"
-        ></canvas>
+        <div class="flex items-center justify-between m-5">
+          <canvas
+            id="chart"
+            class=" bg-sky-100/50 rounded"
+          ></canvas>
+        </div>
 
         <div class="flex justify-between text-sm text-sky-900 mt-2">
           <span id="min-elevation">Min:</span>

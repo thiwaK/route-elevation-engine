@@ -9,6 +9,7 @@ const transitLayerURL = `https://{s}.tiles.mapbox.com/v4/mapbox.mapbox-streets-v
 const routeSegmentLayerURL = `https://api.mapbox.com/directions/v5/mapbox/driving/{coords}?geometries=geojson&overview=full&access_token={token}`;
 
 let map: L.Map;
+export let oldMarkerArray: L.CircleMarker[] = [];
 export let markerArray: L.CircleMarker[] = [];
 export const storage = Storage();
 
@@ -31,7 +32,7 @@ function addCircleMarker(latlng: L.LatLngExpression) {
 function onAddPointTransit(e: any) {
   const { latlng } = e;
   if (latlng) {
-    storage.addPoint([latlng.lat, latlng.lng]);
+    storage.savePoint([latlng.lat, latlng.lng]);
     const marker = addCircleMarker(latlng as L.LatLngExpression);
     markerArray.push(marker);
   }
@@ -46,6 +47,7 @@ export function addRoutes(mapObj: L.Map): Remove {
     subdomains: "abcd",
     interactive: true,
     maxZoom: 18,
+    minZoom:15,
     unit: "metric",
   });
 
@@ -70,6 +72,11 @@ export function clearTransitMarkers() {
 
 export async function getRoadSegement() {
   if (markerArray.length < 2) return null;
+  if (
+    markerArray.every((element, index) => {
+      return element === oldMarkerArray[index];
+    })
+  ) return null;
 
   const coords = markerArray
     .map((p) => {
@@ -94,8 +101,9 @@ export async function getRoadSegement() {
     (c: number[]) => [c[1], c[0]]
   );
 
+  oldMarkerArray = [...markerArray];
+  console.log(route)
   
-
   return {
     geometry,
     distance: route.distance, // meters

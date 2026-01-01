@@ -1,38 +1,36 @@
 import { routeStore } from "./Strage";
+import type { FeatureCollection } from "geojson";
 
 export function Storage() {
   return {
-    addPoint: (pt: [number, number]) =>
-      routeStore.getState().addPoint(pt),
+    savePoint: (pt: [number, number]) => routeStore.getState().addPoint(pt),
 
-    setPoints: (pts: [number, number][]) =>
+    savePoints: (pts: [number, number][]) =>
       routeStore.getState().setPoints(pts),
 
-    setSegment: (seg: [number, number][] | null) =>
-      routeStore.getState().setSegment(seg),
+    saveSegment: (seg: FeatureCollection | null) =>
+      routeStore.getState().setRoadSegment(seg),
 
-    setContour: (seg: [number, number][] | null) =>
+    saveContours: (seg: FeatureCollection | null) =>
       routeStore.getState().setContour(seg),
 
-    clear: () =>
-      routeStore.getState().clear(),
+    clear: () => routeStore.getState().clear(),
 
     // Always fresh state via getters
     get points() {
       return routeStore.getState().points;
     },
 
-    get segment() {
-      return routeStore.getState().segment;
+    get roadSegment() {
+      return routeStore.getState().roadSegment;
     },
 
-    get contour() {
+    get contours() {
       return routeStore.getState().contour;
     },
 
-    get listener(){
+    get listener() {
       return routeStore.subscribe;
-    }
-    
+    },
   };
 }

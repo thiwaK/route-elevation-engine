@@ -1,9 +1,20 @@
 import { VectorTile } from "@mapbox/vector-tile";
 import Pbf from "pbf";
-// import tilebelt from "@mapbox/tilebelt";
 import * as turf from "@turf/turf";
-import L from "leaflet";
-import type { GeoJsonObject, FeatureCollection, Feature, Geometry } from "geojson";
+import type {
+  GeoJsonObject,
+  FeatureCollection,
+  Feature,
+  Geometry,
+  LineString,
+  Polygon,
+  Point,
+} from "geojson";
+import booleanIntersects from "@turf/boolean-intersects";
+import lineIntersect from "@turf/line-intersect";
+import { downloadGeoJSON } from "./utilities";
+// import FeatureCollectionPBuffer from "arcgis-pbf-parser";
+
 export function samplePolyline(
   polyline: GeoJSON.Feature<GeoJSON.LineString>,
   dataset: GeoJSON.FeatureCollection
@@ -24,136 +35,127 @@ export function samplePolyline(
   return results;
 }
 
-function tilePointToLngLat(
-  x: number,
-  y: number,
-  z: number,
-  extent: number,
-  px: number,
-  py: number
-): [number, number] {
-  const n = Math.pow(2, z);
-  const lng = ((x + px / extent) / n) * 360 - 180;
+export function getEleveationAlongRoad(roadFC: any, contourFC: any) {
+  const results = [];
 
-  const latRad = Math.atan(
-    Math.sinh(Math.PI * (1 - (2 * (y + py / extent)) / n))
-  );
+  // const intersections = lineIntersect(roadFC, contourFC);
+  // if (intersections.features.length > 0) {
+  //   console.log("intersecting contour", intersections);
+  // }
 
-  return [lng, (latRad * 180) / Math.PI];
-}
+  for (const road of roadFC.features) {
 
-function decodeVectorTile(arrayBuffer: ArrayBuffer): VectorTile {
-    console.log(arrayBuffer)
-  return new VectorTile(new Pbf(arrayBuffer));
-}
+    for (const contour of contourFC.features) {
+      if (booleanIntersects(road, contour)) {
 
-function vtFeatureToGeoJSON(
-  feature: any,
-  tileX: number,
-  tileY: number,
-  tileZ: number,
-  extent = 4096
-) {
-  const geom = feature.loadGeometry();
-  const coordinates: any[] = [];
-
-  for (const ring of geom) {
-    const line: number[][] = [];
-    for (const p of ring) {
-      line.push(tilePointToLngLat(tileX, tileY, tileZ, extent, p.x, p.y));
-    }
-    coordinates.push(line);
-  }
-
-  return {
-    type: "Feature",
-    geometry: {
-      type:
-        feature.type === 1
-          ? "Point"
-          : feature.type === 2
-          ? "LineString"
-          : "Polygon",
-      coordinates: feature.type === 3 ? coordinates : coordinates[0],
-    },
-    properties: feature.properties,
-  };
-}
-
-export function mergeTiles(
-  tiles: {
-    x: number;
-    y: number;
-    z: number;
-    data: ArrayBuffer;
-  }[],
-  layerName: string
-) {
-  const features: any[] = [];
-
-  for (const tile of tiles) {
-    const vt = decodeVectorTile(tile.data);
-    const layer = vt.layers[layerName];
-    if (!layer) continue;
-
-    for (let i = 0; i < layer.length; i++) {
-      const f = layer.feature(i);
-      features.push(
-        vtFeatureToGeoJSON(f, tile.x, tile.y, tile.z, layer.extent)
-      );
+        const roadXY = road.geometry.coordinates
+        const contourVal = contour.properties
+        results.push({
+          roadXY,
+          contourVal,
+        });
+      }
     }
   }
 
-  return {
-    type: "FeatureCollection",
-    features,
-  };
+  return results;
 }
-
-
-
-export function swapCoords(feature: Feature): Feature {
-  const geom = feature.geometry;
-
-  if (geom.type === "Point") {
-    geom.coordinates = [geom.coordinates[1], geom.coordinates[0]];
-  } else if (geom.type === "LineString") {
-    geom.coordinates = (geom.coordinates as [number, number][]).map(
-      ([lng, lat]) => [lat, lng]
-    );
-  } else if (geom.type === "Polygon") {
-    geom.coordinates = (geom.coordinates as [number, number][][]).map(ring =>
-      ring.map(([lng, lat]) => [lat, lng])
-    );
-  }
-
-  return feature;
-}
-
 
 export function processPBF(pbfArray: any[], layerName: string) {
   const features: any[] = [];
 
   for (let i = 0; i < pbfArray.length; i++) {
-    const { data: dbf, x: x, y: y, z: z } = pbfArray[i];
-    const vTile = decodeVectorTile(dbf);
+    const { data: rawPbf, x: x, y: y, z: z } = pbfArray[i];
+    const pbf = new Pbf(new Uint8Array(rawPbf));
+    const vTile = new VectorTile(pbf);
     const layer = vTile.layers[layerName];
-    console.log(vTile)
-    console.log(layer)
+    // console.log("vTile", vTile);
+    // console.log("layer", layer);
 
     if (!layer) continue;
+    // console.log("feature count", layer.length)
+    // console.log("extent", layer.extent)
 
     for (let j = 0; j < layer.length; j++) {
-      const f = layer.feature(j);
-      console.log(f)
-      features.push(vtFeatureToGeoJSON(f, x, y, z, layer.extent));
+      const feature = layer.feature(j);
+      const geojsonFeature = feature.toGeoJSON(x, y, z);
+      //   console.log("feature", feature);
+      //   console.log("feature json", geojsonFeature)
+      features.push(geojsonFeature);
     }
   }
 
-  const geojson: FeatureCollection  = {
+  const geojson: FeatureCollection = {
     type: "FeatureCollection",
-    features: features
+    features: features,
   };
 
   return geojson;
+}
+
+type XY = [number, number];
+export function xyArrayToGeojson(
+  array: Array<XY>,
+  swapXY = true
+): FeatureCollection<Point> {
+  const featureCollection: FeatureCollection<Point> = {
+    type: "FeatureCollection",
+    features: array.map<Feature<Point>>((coord, i) => {
+      const coordinates: [number, number] = swapXY
+        ? [coord[1], coord[0]]
+        : coord;
+      return {
+        type: "Feature",
+        geometry: {
+          type: "Point",
+          coordinates,
+        },
+        properties: { id: i },
+      };
+    }),
+  };
+
+  return featureCollection;
+}
+
+export function geojsonToXYArray(
+  fc: FeatureCollection,
+  swapXY = true
+): Array<XY> {
+  const out: Array<XY> = [];
+  for (const feature of fc.features) {
+    if (!feature || !feature.geometry) continue;
+
+    const geom = feature.geometry;
+    if (geom.type === "Point") {
+      const coords = geom.coordinates as unknown as [number, number];
+      out.push(swapXY ? [coords[1], coords[0]] : coords);
+    } else if (geom.type === "MultiPoint") {
+      for (const c of geom.coordinates as [number, number][]) {
+        out.push(swapXY ? [c[1], c[0]] : c);
+      }
+    } else if (geom.type === "LineString") {
+      for (const c of geom.coordinates as [number, number][]) {
+        out.push(swapXY ? [c[1], c[0]] : c);
+      }
+    } else if (geom.type === "MultiLineString" || geom.type === "Polygon") {
+      // flatten one level of arrays (handles rings for Polygon too)
+      for (const part of geom.coordinates as any[]) {
+        for (const c of part as [number, number][]) {
+          out.push(swapXY ? [c[1], c[0]] : c);
+        }
+      }
+    } else if (geom.type === "MultiPolygon") {
+      for (const poly of geom.coordinates as any[]) {
+        for (const ring of poly) {
+          for (const c of ring as [number, number][]) {
+            out.push(swapXY ? [c[1], c[0]] : c);
+          }
+        }
+      }
+    }
+    // ignore GeometryCollection or unknown types; extend if needed
+  }
+
+  return out;
 }

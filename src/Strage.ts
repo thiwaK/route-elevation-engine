@@ -1,20 +1,21 @@
 import { createStore } from "zustand/vanilla";
+import type { FeatureCollection } from "geojson";
 
 type RouteStore = {
   points: [number, number][];
-  segment: [number, number][] | null;
-  contour: [number, number][] | null;
+  roadSegment: FeatureCollection | null;
+  contour: FeatureCollection | null;
 
   setPoints: (pts: [number, number][]) => void;
   addPoint: (pt: [number, number]) => void;
-  setSegment: (seg: [number, number][] | null) => void;
+  setRoadSegment: (seg: FeatureCollection | null) => void;
   clear: () => void;
-  setContour: (seg: [number, number][] | null) => void;
+  setContour: (seg: FeatureCollection | null) => void;
 };
 
 export const routeStore = createStore<RouteStore>((set) => ({
   points: [],
-  segment: null,
+  roadSegment: null,
   contour: null,
 
   setPoints: (pts) => set({ points: pts }),
@@ -22,9 +23,9 @@ export const routeStore = createStore<RouteStore>((set) => ({
   addPoint: (pt) =>
     set((s) => ({ points: [...s.points, pt] })),
 
-  setSegment: (seg) => set({ segment: seg }),
+  setRoadSegment: (seg) => set({ roadSegment: seg }),
 
-  clear: () => set({ points: [], segment: null }),
+  clear: () => set({ points: [], roadSegment: null }),
 
   setContour: (cont) => set({ contour: cont }),
 }));

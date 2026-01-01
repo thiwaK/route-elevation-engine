@@ -163,6 +163,8 @@ export function toggleElevationProfileVisibility(
   if (elevationProfileContainer) {
     isVisible = !isVisible;
   }
+
+  updateElevationProfileContainerStyles(elevationProfileContainer, profileViewInitialSize)
   return isVisible!;
 }
 
