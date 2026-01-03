@@ -2,6 +2,17 @@ import L from "leaflet";
 import "leaflet.vectorgrid";
 import tileStyling from "./TransitLayerStyling";
 import { Storage } from "./StorageAPI";
+import { lineString } from "@turf/turf";
+import type {
+  GeoJsonObject,
+  FeatureCollection,
+  Feature,
+  Geometry,
+  LineString,
+  Polygon,
+  Point,
+} from "geojson";
+import bbox from "@turf/bbox";
 
 const accessToken =
   "pk.eyJ1IjoicHJvaWN0IiwiYSI6ImNsdDQ2bWJ0cjBiN24ycXBzY2F0aHgwNnYifQ.aen9m87FEaN8hEpQC5IN9A";
@@ -47,7 +58,7 @@ export function addRoutes(mapObj: L.Map): Remove {
     subdomains: "abcd",
     interactive: true,
     maxZoom: 18,
-    minZoom:15,
+    minZoom: 12,
     unit: "metric",
   });
 
@@ -76,7 +87,8 @@ export async function getRoadSegement() {
     markerArray.every((element, index) => {
       return element === oldMarkerArray[index];
     })
-  ) return null;
+  )
+    return null;
 
   const coords = markerArray
     .map((p) => {
@@ -92,20 +104,29 @@ export async function getRoadSegement() {
   const res = await fetch(url);
   const data = await res.json();
 
-  if (data.code != "Ok") throw new Error("Route segment featch failed");
+  if (data.code != "Ok")
+    throw new Error(`Failed featch route data: ${data.code}`);
   if (!data.routes || !data.routes[0]) return null;
 
   const route = data.routes[0];
 
-  const geometry: [number, number][] = route.geometry.coordinates.map(
-    (c: number[]) => [c[1], c[0]]
-  );
+  const geojsonFeature: Feature<LineString> = {
+    type: "Feature",
+    geometry: route.geometry,
+    properties: { id: "road_1" },
+  };
+  const geojson: FeatureCollection<LineString> = {
+    type: "FeatureCollection",
+    features: [geojsonFeature],
+  };
 
+  const boundingBox = bbox(geojson);
   oldMarkerArray = [...markerArray];
-  console.log(route)
-  
+  console.log(route);
+
   return {
-    geometry,
+    geojson,
+    boundingBox,
     distance: route.distance, // meters
     duration: route.duration, // seconds
     raw: route,

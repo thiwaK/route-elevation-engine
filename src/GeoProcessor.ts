@@ -10,10 +10,49 @@ import type {
   Polygon,
   Point,
 } from "geojson";
+
 import booleanIntersects from "@turf/boolean-intersects";
 import lineIntersect from "@turf/line-intersect";
+import length from "@turf/length";
+import nearestPointOnLine from "@turf/nearest-point-on-line";
 import { downloadGeoJSON } from "./utilities";
-// import FeatureCollectionPBuffer from "arcgis-pbf-parser";
+import polygonToLine from "@turf/polygon-to-line";
+import { lineString } from "@turf/helpers";
+import bbox from "@turf/bbox";
+import type { BBox } from "geojson";
+
+function latLngToTileXY(lat: number, lng: number, zoom: number) {
+  const sinLat = Math.sin((lat * Math.PI) / 180);
+  const n = Math.pow(2, zoom);
+
+  const x = Math.floor(((lng + 180) / 360) * n);
+  const y = Math.floor(
+    ((1 - Math.log((1 + sinLat) / (1 - sinLat)) / (2 * Math.PI)) * n) / 2
+  );
+
+  return { x, y };
+}
+
+export function getTilesInBounds(boundingBox: BBox, zoom: number) {
+  const [minLng, minLat, maxLng, maxLat] = boundingBox;
+  const sw = latLngToTileXY(minLat, minLng, zoom);
+  const ne = latLngToTileXY(maxLat, maxLng, zoom);
+
+  const tiles: { x: number; y: number; z: number }[] = [];
+
+  const minX = Math.min(sw.x, ne.x);
+  const maxX = Math.max(sw.x, ne.x);
+  const minY = Math.min(sw.y, ne.y);
+  const maxY = Math.max(sw.y, ne.y);
+
+  for (let x = minX; x <= maxX; x++) {
+    for (let y = minY; y <= maxY; y++) {
+      tiles.push({ x, y, z: zoom });
+    }
+  }
+
+  return tiles;
+}
 
 export function samplePolyline(
   polyline: GeoJSON.Feature<GeoJSON.LineString>,
@@ -35,30 +74,136 @@ export function samplePolyline(
   return results;
 }
 
-export function getEleveationAlongRoad(roadFC: any, contourFC: any) {
-  const results = [];
+export function getElevationAlongRoad(
+  roadFC: FeatureCollection<LineString>,
+  contourFC: any
+) {
+  const intersections = [];
 
-  // const intersections = lineIntersect(roadFC, contourFC);
-  // if (intersections.features.length > 0) {
-  //   console.log("intersecting contour", intersections);
+  // contourFC.features.forEach(
+  //   (f: { geometry: { type: any; coordinates: any } }, i: any) => {
+  //     console.log(i, f.geometry.type, f.geometry.coordinates);
+  //   }
+  // );
+
+  console.log("roadFC", roadFC);
+  for (const contour of contourFC.features) {
+    const pts = lineIntersect(roadFC, contour);
+    intersections.push({ point:pts, contour });
+  }
+
+  return intersections;
+
+  // const results: { distance: number; elevation: number }[] = [];
+
+  // for (const road of roadFC.features) {
+  //   if (
+  //     road.geometry.type !== "LineString" &&
+  //     road.geometry.type !== "MultiLineString"
+  //   )
+  //     continue;
+
+  //   for (const pt of intersections.features) {
+  //     const snapped = nearestPointOnLine(road, pt.geometry.coordinates);
+
+  //     results.push({
+  //       distance: snapped.properties.location,
+  //       elevation: pt.properties!.ele, // elevation on polygon
+  //     });
+  //   }
   // }
 
-  for (const road of roadFC.features) {
+  // return results.sort((a, b) => a.distance - b.distance);
+}
 
-    for (const contour of contourFC.features) {
-      if (booleanIntersects(road, contour)) {
+function isValidRing(ring: number[][]) {
+  if (!Array.isArray(ring) || ring.length < 4) return false;
 
-        const roadXY = road.geometry.coordinates
-        const contourVal = contour.properties
-        results.push({
-          roadXY,
-          contourVal,
-        });
+  const first = ring[0];
+  const last = ring[ring.length - 1];
+
+  // must be closed
+  if (first[0] !== last[0] || first[1] !== last[1]) return false;
+
+  // no NaNs
+  for (const c of ring) {
+    if (!isFinite(c[0]) || !isFinite(c[1])) return false;
+  }
+
+  return true;
+}
+
+export function contoursToLines(contourFC: any) {
+  const lines = [];
+
+  for (const f of contourFC.features) {
+    const g = f.geometry;
+    if (!g) continue;
+
+    if (g.type === "Polygon") {
+      for (const ring of g.coordinates) {
+        if (isValidRing(ring)) {
+          lines.push(lineString(ring, f.properties));
+        }
+      }
+    }
+
+    if (g.type === "MultiPolygon") {
+      for (const poly of g.coordinates) {
+        for (const ring of poly) {
+          if (isValidRing(ring)) {
+            lines.push(lineString(ring, f.properties));
+          }
+        }
       }
     }
   }
 
-  return results;
+  return {
+    type: "FeatureCollection",
+    features: lines,
+  };
+}
+
+function sanitizeGeometry(feature: any) {
+  const g = feature.geometry;
+  if (!g) return null;
+
+  // ---- POLYGON ----
+  if (g.type === "Polygon") {
+    const rings = g.coordinates.filter(isValidRing);
+    if (rings.length === 0) return null;
+
+    return {
+      ...feature,
+      geometry: { type: "Polygon", coordinates: rings },
+    };
+  }
+
+  // ---- MULTIPOLYGON ----
+  if (g.type === "MultiPolygon") {
+    const polys = g.coordinates
+      .map((poly: number[][][]) => poly.filter(isValidRing))
+      .filter((poly: number[][][]) => poly.length > 0);
+
+    if (polys.length === 0) return null;
+
+    // downgrade single polygon multipolys
+    if (polys.length === 1) {
+      return {
+        ...feature,
+        geometry: { type: "Polygon", coordinates: polys[0] },
+      };
+    }
+
+    return {
+      ...feature,
+      geometry: { type: "MultiPolygon", coordinates: polys },
+    };
+  }
+
+  // ---- PASS THROUGH ----
+  return feature;
 }
 
 export function processPBF(pbfArray: any[], layerName: string) {
@@ -76,12 +221,10 @@ export function processPBF(pbfArray: any[], layerName: string) {
     // console.log("feature count", layer.length)
     // console.log("extent", layer.extent)
 
-    for (let j = 0; j < layer.length; j++) {
-      const feature = layer.feature(j);
-      const geojsonFeature = feature.toGeoJSON(x, y, z);
-      //   console.log("feature", feature);
-      //   console.log("feature json", geojsonFeature)
-      features.push(geojsonFeature);
+    for (let i = 0; i < layer.length; i++) {
+      const geojson = layer.feature(i).toGeoJSON(x, y, z);
+      const clean = sanitizeGeometry(geojson);
+      if (clean) features.push(clean);
     }
   }
 
@@ -158,4 +301,25 @@ export function geojsonToXYArray(
   }
 
   return out;
+}
+
+export function distanceBetweenPoints(
+  coordinateA: number[],
+  coordinateB: number[]
+) {
+  const earthRadius = 6371;
+  const dLat = ((coordinateB[0] - coordinateA[0]) * Math.PI) / 180;
+  const dLon = ((coordinateB[1] - coordinateA[1]) * Math.PI) / 180;
+
+  const a =
+    Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+    Math.cos((coordinateA[0] * Math.PI) / 180) *
+      Math.cos((coordinateB[0] * Math.PI) / 180) *
+      Math.sin(dLon / 2) *
+      Math.sin(dLon / 2);
+
+  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+  const distance = earthRadius * c * 1000;
+
+  return distance;
 }

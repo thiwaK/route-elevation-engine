@@ -1,14 +1,14 @@
 import { createStore } from "zustand/vanilla";
-import type { FeatureCollection } from "geojson";
+import type { FeatureCollection, LineString } from "geojson";
 
 type RouteStore = {
   points: [number, number][];
-  roadSegment: FeatureCollection | null;
+  roadSegment: FeatureCollection<LineString> | null;
   contour: FeatureCollection | null;
 
   setPoints: (pts: [number, number][]) => void;
   addPoint: (pt: [number, number]) => void;
-  setRoadSegment: (seg: FeatureCollection | null) => void;
+  setRoadSegment: (seg: FeatureCollection<LineString> | null) => void;
   clear: () => void;
   setContour: (seg: FeatureCollection | null) => void;
 };

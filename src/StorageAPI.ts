@@ -1,5 +1,5 @@
 import { routeStore } from "./Strage";
-import type { FeatureCollection } from "geojson";
+import type { FeatureCollection, LineString } from "geojson";
 
 export function Storage() {
   return {
@@ -8,7 +8,7 @@ export function Storage() {
     savePoints: (pts: [number, number][]) =>
       routeStore.getState().setPoints(pts),
 
-    saveSegment: (seg: FeatureCollection | null) =>
+    saveSegment: (seg: FeatureCollection<LineString> | null) =>
       routeStore.getState().setRoadSegment(seg),
 
     saveContours: (seg: FeatureCollection | null) =>

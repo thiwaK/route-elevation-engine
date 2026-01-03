@@ -390,46 +390,27 @@ function lonLatToTile(
   return [x, y];
 }
 
-function latLngToTileXY(lat: number, lng: number, zoom: number) {
-  const sinLat = Math.sin((lat * Math.PI) / 180);
-  const n = Math.pow(2, zoom);
-
-  const x = Math.floor(((lng + 180) / 360) * n);
-  const y = Math.floor(
-    (1 -
-      Math.log((1 + sinLat) / (1 - sinLat)) /
-        (2 * Math.PI)) *
-      n / 2
-  );
-
-  return { x, y };
+export function sortPaired<T, U>(a: T[], b: U[]): { a: T[]; b: U[] } {
+  if (a.length !== b.length) throw new Error('Arrays must have same length');
+  const pairs = a.map((val, i) => ({ val, b: b[i] }));
+  pairs.sort((p1, p2) => {
+    if (p1.val < p2.val) return -1;
+    if (p1.val > p2.val) return 1;
+    return 0;
+  });
+  return {
+    a: pairs.map(p => p.val),
+    b: pairs.map(p => p.b),
+  };
 }
 
-export function getTilesInBounds(
-  minLat: number,
-  minLng: number,
-  maxLat: number,
-  maxLng: number,
-  zoom: number
-) {
-  const sw = latLngToTileXY(minLat, minLng, zoom);
-  const ne = latLngToTileXY(maxLat, maxLng, zoom);
+// usage
+const a = [3, 1, 2];
+const b = ['c', 'a', 'b'];
+const sorted = sortPaired(a, b);
+// sorted.a -> [1,2,3], sorted.b -> ['a','b','c']
 
-  const tiles: { x: number; y: number; z: number }[] = [];
 
-  const minX = Math.min(sw.x, ne.x);
-  const maxX = Math.max(sw.x, ne.x);
-  const minY = Math.min(sw.y, ne.y);
-  const maxY = Math.max(sw.y, ne.y);
-
-  for (let x = minX; x <= maxX; x++) {
-    for (let y = minY; y <= maxY; y++) {
-      tiles.push({ x, y, z: zoom });
-    }
-  }
-
-  return tiles;
-}
 
 export function downloadGeoJSON(data: object, filename = "data.geojson") {
   const jsonStr = JSON.stringify(data, null, 2);

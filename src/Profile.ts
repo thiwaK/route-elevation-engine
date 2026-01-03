@@ -22,14 +22,21 @@ Chart.register(
   PointElement,
   LineElement
 );
+let chart: Chart|null = null;
+export function profile(canvas: HTMLCanvasElement, dataArray: number[], lblArray: number[]) {
 
-export function profile(canvas: HTMLCanvasElement, dataArray: number[]) {
-  const labels = dataArray.map((_, i) => i.toString());
+  if(chart) {
+    chart.clear
+    chart.destroy
+    chart = null
+  }
 
-  const chart = new Chart(canvas as any, {
+  console.log("dataArray", dataArray)
+  console.log("lblArray", lblArray)
+  chart = new Chart(canvas as any, {
     type: "line",
     data: {
-      labels: labels,
+      labels: lblArray,
       datasets: [
         {
           label: "Elevation",
@@ -48,10 +55,12 @@ export function profile(canvas: HTMLCanvasElement, dataArray: number[]) {
       maintainAspectRatio: false,
       scales: {
         x: {
-          title: { display: true, text: "Sample" },
+          title: { display: true, text: "Distance (Meters)" },
+          type: "linear",
+          min: 0
         },
         y: {
-          title: { display: true, text: "Elevation" },
+          title: { display: true, text: "Elevation (Meters)" },
           beginAtZero: false,
         },
       },

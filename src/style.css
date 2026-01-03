@@ -29,3 +29,6 @@ body,
 .orientation-horizontal #elevationProfileResizeHandler {
   cursor: ew-resize;
 }
+
+.ele-div-icon { background: rgba(0,0,0,0.7); border-radius: 4px; color: #fff; padding: 2px 6px; font-size: 12px; white-space: nowrap; }
+.ele-marker { pointer-events: none; }
